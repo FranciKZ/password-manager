@@ -1,0 +1,30 @@
+main.py
+    Classes:
+        none
+    Needs methods for:
+        displaying GUI
+        getting user data
+              
+databaseFunction.py
+    Needs classes for:
+        Data retrieval
+            Needs Methods For:
+                Getting User Services
+                Getting User Password
+
+        Data saving
+            Needs Methods For:
+                Saving User Data with encrypted password
+                Communicating with encryption classes
+                
+encryption.py                   
+    Classes:
+        PasswordManagement:
+            Needs Methods For:
+                Generating Password
+                Encrypting Password
+                Unencrypting Password
+        Database Management:
+            Needs Methods For:
+                Encrypting Database
+                UnEncrypting Database

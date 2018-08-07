@@ -23,8 +23,8 @@ encryption.py
             Needs Methods For:
                 Generating Password
                 Encrypting Password
-                Unencrypting Password
+                decrypting Password
         Database Management:
             Needs Methods For:
                 Encrypting Database
-                UnEncrypting Database
+                decrypting Database

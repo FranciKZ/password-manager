@@ -1,53 +1,42 @@
 import base64
 import hashlib
-import secrets
-import string
 from Crypto import Random
 from Crypto.Cipher import AES
 
-BS = 16
-pad = lambda s: s + (BS - len(s) % BS) * chr(BS - len(s) % BS).encode()
-unpad = lambda s: s[:-ord(s[len(s)-1:])]
+class AESCipher(object):
 
-def iv():
-    return chr(0) * 16
+    def __init__(self, key): 
+        self.bs = 32
+        self.key = hashlib.sha256(key.encode()).digest()
 
-class PasswordEncryption(object):    
-    def __init__(self, key):
-        self.key = key
+    def encrypt(self, raw):
+        raw = self._pad(raw)
+        iv = Random.new().read(AES.block_size)
+        cipher = AES.new(self.key, AES.MODE_CBC, iv)
+        return base64.b64encode(iv + cipher.encrypt(raw))
 
-    def genPassword():
-        alphabet = string.ascii_letters + string.digits
-        password = ''.join(secrets.choice(alphabet) for i in range(20))
-        return password
+    def decrypt(self, enc):
+        enc = base64.b64decode(enc)
+        iv = enc[:AES.block_size]
+        cipher = AES.new(self.key, AES.MODE_CBC, iv)
+        return self._unpad(cipher.decrypt(enc[AES.block_size:])).decode('utf-8')
 
-    def encryptPassword(self, password):
-        password = password.encode()
-        raw = pad(password)
-        cipher = AES.new(self.key, AES.MODE_CBC, iv())
-        enc = cipher.encrypt(raw)
-        return base64.b64encode(enc).decode('utf-8')
+    def _pad(self, s):
+        return s + (self.bs - len(s) % self.bs) * chr(self.bs - len(s) % self.bs)
 
-    def decryptPassword(self, enc):
-        enc = base64.b64ecord(enc)
-        cipher = AES.new(self.key, AES.MODE_CBC, iv())
-        dec = cipher.decrypt(enc)
-        return unpad(dec).decode('utf-8')
-"""
-class DatabaseEncryption:
-    def encryptDB():
-        return encryptedDB
+    @staticmethod
+    def _unpad(s):
+        return s[:-ord(s[len(s)-1:])]
 
-    def unencryptDB():
-        return unencryptedDB
-"""
 
-key = 'abcdefghijklmnopqrstuvwxyz123456'
-password = 'FrancisRules'
-_enc = 'gOXlygE+qxS+69zN5qC6eKJvMiEoDQtdoJb3zjT8f/E='
+# Testing purposes
 
-enc = PasswordEncryption(key).encryptPassword(message)
-dec = PasswordEncryption(key).decryptPassword(_enc)
+#key = '1234567890abcdefgh'
+#message = 'this is a message'
 
-print(_enc == enc)
-print(message == dec)
+#enc = AESCipher(key).encrypt(message)
+#dec = AESCipher(key).decrypt(enc)
+
+#print(_enc)
+#print(enc)
+#print(message == dec)

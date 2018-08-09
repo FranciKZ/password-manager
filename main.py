@@ -1,13 +1,18 @@
 from databaseFunction import *
-
-def genPassword():
-    password = "This is a password"
-    return password
+import os
+import os.path
 
 def main():
     # how to use databaseFunction functions
-    # password = RetrieveData.unencrypt('test')
-    print(password)
+    if not os.path.isfile('password_manager_db.db'):
+        SaveData.createDB(None)
+    else:
+        #do the rest of the code
+        return False
+
+
+
+    return True
 
 if __name__ == '__main__':
     main()

@@ -1,4 +1,4 @@
-from databaseFunction import *
+from databaseFunction import SaveData, RetrieveData
 import os
 import os.path
 

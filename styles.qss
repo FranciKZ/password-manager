@@ -1,0 +1,16 @@
+QWidget{
+    background-color: #222222;
+}
+
+QPushButton{
+    background-color: #FFFFFF;
+    height: 3em;
+    margin: 0 0.5em 0 0.5em;
+    padding: 5px;
+}
+QLabel{
+    color: #FFFFFF;
+}
+QComboBox{
+    background-color: #FFFFFF;
+}

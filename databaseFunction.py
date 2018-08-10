@@ -5,7 +5,7 @@ from sqlite3 import Error
 from encryption import AESCipher
 
 class SaveData:
-    def insertNewService(self, userName, serviceName, key):
+    def insertNewService(self, key, db, userName, serviceName):
         # Generate New Password and Encrypt
         encryptedPass = AESCipher(key).encrypt(self.genPassword())
 
@@ -13,7 +13,7 @@ class SaveData:
         # Insert Data
         # Try/catch is to ensure any faults are caught
         try:
-            conn = sqlite3.connect('pass_manager_db.db')
+            conn = sqlite3.connect(db)
             c = conn.cursor()
 
             c.execute('''INSERT INTO Services (serviceName) VALUES (?)''', (serviceName,))
@@ -28,13 +28,13 @@ class SaveData:
             conn.close()
             return True
 
-    def changePassword(self, serviceName, key):
+    def changePassword(self, key, db, serviceName):
         newPass = AESCipher(key).encrypt(self.genPassword())
         #serviceID = c.execute('''   SELECT serviceID 
         #                            FROM services 
         #                            WHERE ? = serviceName''', serviceName)
         try: 
-            conn = sqlite3.connect('pass_manager_db.db')
+            conn = sqlite3.connect(db)
             c = conn.cursor()
             c.execute('''   UPDATE Passwords (password) 
                             SET password = ?
@@ -57,9 +57,9 @@ class SaveData:
         return ''.join(secrets.choice(alphabet) for i in range(20))
 
     # Used for intial DB creation and setup    
-    def createDB(self):
+    def createDB(self, db):
         try:
-            conn = sqlite3.connect('pass_manager_db.db')
+            conn = sqlite3.connect(db)
             c = conn.cursor()
             create_tables = ''' CREATE TABLE Services (
                                     serviceID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -88,10 +88,10 @@ class SaveData:
             return True
 
 class RetrieveData:
-    def getPassword(self, serviceID, key):
+    def getPassword(self, key, db, serviceID):
         password = ''
         try:
-            conn = sqlite3.connect('pass_manager_db.db')
+            conn = sqlite3.connect(db)
             c = conn.cursor
             password = c.execute('''SELECT password FROM Passwords WHERE Passwords.serviceID = ?''', (serviceID,))
         except Error as e:
@@ -101,12 +101,12 @@ class RetrieveData:
             conn.close()
     
         return AESCipher(key).decrypt(password)
-    def getUserAndPass(self, serviceID, key):
+    def getUserAndPass(self, key, db, serviceID):
         userName = ''
         password = ''
 
         try:
-            conn = sqlite3.connect('pass_manager_db.db')
+            conn = sqlite3.connect(db)
             c = conn.cursor
 
             c.execute(  '''   SELECT Usernames.userName, Passwords.password
@@ -125,10 +125,10 @@ class RetrieveData:
 
         return (userName, password)    
 
-    def retrieveServices(self):
+    def retrieveServices(self, db):
         listOfServices = ''
         try:
-            conn = sqlite3.connect('pass_manager_db.db')
+            conn = sqlite3.connect(db)
             c = conn.sursor
 
             listOfServices = c.execute(

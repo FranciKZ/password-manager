@@ -1,34 +1,122 @@
+"""
+    Created by: Kollin Francis
+    
+    Todo:
+        Create Change Password Layout
+        Create Generate Password Layout
+        Implement Add Service Layout Functionality
+            Get information from Text boxes
+            Send information to database functions
+        Implement Get Username and Password Layout Functionality
+            Display username textually
+            Have it copy password straight to clipboard
+        Add master key lock before welcome screen
+        Add combobox information in username and password layout
+"""
 from databaseFunction import SaveData, RetrieveData
-from PyQt5.QtWidgets import (QApplication, QWidget, QToolTip, QPushButton, QApplication)
+from PyQt5.QtWidgets import (   QApplication, QWidget, QToolTip, QPushButton, QApplication,
+                                QGridLayout, QStackedLayout, QMainWindow, QLineEdit, QLabel,
+                                QComboBox)
 from PyQt5.QtGui import QFont
 import os
 import sys
 import os.path
 
+
+
 def restOfCode():
     app = QApplication(sys.argv)
-    ex = Example()
+    ex = MainWindow()
     sys.exit(app.exec_())
 
-class Example(QWidget):
+class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.initUI()
-    
-    def initUI(self):
-        QToolTip.setFont(QFont('SansSerif', 10))
+        self.setWindowTitle('Password Manager')
+        self.setStyleSheet(open("styles.qss", "r").read())
         self.setToolTip('This is a <b>QWidget</b> widget')
+        QToolTip.setFont(QFont('SansSerif', 10))
+        self.welcome()
 
-        btn = QPushButton('Button', self)
-        btn.setToolTip('This is a <b>QPushButton</b> widget')
-        btn.resize(btn.sizeHint())
-        btn.move(100, 100)
+        self.stacked_layout = QStackedLayout() # Holds various layouts
+        self.stacked_layout.addWidget(self.welcome_screen)
+        self.create_add_service_layout()
+        self.create_get_userpass_layout()
+        self.stacked_layout.addWidget(self.add_service_widget)
+        self.stacked_layout.addWidget(self.get_userpass_widget)
 
-        # x, y, width, height
+        self.central_widget = QWidget()
+        self.central_widget.setLayout(self.stacked_layout)
+        self.setCentralWidget(self.central_widget)
         self.setGeometry(500, 500, 600, 300)
-        self.setWindowTitle('Icon')
         self.show()
+
+    def welcome(self):
+        grid = QGridLayout()
+        self.welcome_screen = QWidget()
+        self.welcome_screen.setLayout(grid)
+        addServiceBtn = QPushButton('Add Service', self)
+        getUserAndPassBtn = QPushButton('Get Username and Password', self)
+        changePassBtn = QPushButton('Change Password', self)
+        genPassBtn = QPushButton('Generate Password', self)  
+
+        grid.addWidget(addServiceBtn, 0, 0)
+        grid.addWidget(getUserAndPassBtn, 0, 1)
+        grid.addWidget(changePassBtn, 2, 0)
+        grid.addWidget(genPassBtn, 2, 1)    
+
+        addServiceBtn.clicked.connect(self.change_layout)
+        getUserAndPassBtn.clicked.connect(self.change_layout)
+        
+    def change_layout(self):
+        sender = self.sender()
+        if(sender.text() == 'Return'):
+            self.stacked_layout.setCurrentIndex(0)
+        elif(sender.text() == 'Add Service'):
+            self.stacked_layout.setCurrentIndex(1)
+        elif(sender.text() == 'Get Username and Password'):
+            self.stacked_layout.setCurrentIndex(2)
+        
+    
+    def create_add_service_layout(self):
+        grid = QGridLayout()
+        self.add_service_widget = QWidget()
+        self.add_service_widget.setLayout(grid)
+
+        serviceLbl = QLabel('Service Name: ')
+        serviceNameField = QLineEdit()
+        userLbl = QLabel('Username: ')
+        userNameField = QLineEdit()
+        addServiceBtn = QPushButton('Add Service') # ~~~~Todo Write Add Service Function
+        returnBtn = QPushButton('Return')
+
+        grid.addWidget(serviceLbl, 1, 0)
+        grid.addWidget(serviceNameField, 1, 1)
+        grid.addWidget(userLbl, 2, 0)
+        grid.addWidget(userNameField, 2, 1)
+        grid.addWidget(addServiceBtn, 3, 0)
+        grid.addWidget(returnBtn, 3, 2)
+
+        returnBtn.clicked.connect(self.change_layout)
+
+    def create_get_userpass_layout(self):
+        grid = QGridLayout()
+        self.get_userpass_widget = QWidget()
+        self.get_userpass_widget.setLayout(grid)
+
+        combo = QComboBox()
+        # ~~ Todo loop through results of services query and add it to combo box
+        userLbl = QLabel('Username: ')
+        passLbl = QLabel('Password has been copied to clipboard')
+        getInfoBtn = QPushButton('Get Username and Password')
+        returnBtn = QPushButton('Return')
+
+        grid.addWidget(combo, 1, 0)
+        grid.addWidget(getInfoBtn, 1, 1)
+        grid.addWidget(returnBtn, 2, 1)
+
+        returnBtn.clicked.connect(self.change_layout)
 
 def main():
     #how to use databaseFunction functions

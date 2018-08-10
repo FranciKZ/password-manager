@@ -1,3 +1,7 @@
+"""
+    Created by: Kollin Francis
+"""
+
 import sqlite3
 import secrets
 import string
@@ -130,11 +134,11 @@ class RetrieveData:
         try:
             conn = sqlite3.connect(db)
             c = conn.sursor
-
-            listOfServices = c.execute(
-                                        ''' SELECT serviceName
-                                            FROM Services
-                                        ''')
+            c.execute(
+                    ''' SELECT serviceName
+                        FROM Services
+                    ''')
+            listOfServices = list(c.fetchall())
         except Error as e:
             print(e)
             return False

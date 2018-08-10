@@ -1,3 +1,7 @@
+"""
+    Created by: Kollin Francis
+"""
+
 import base64
 import hashlib
 from Crypto import Random

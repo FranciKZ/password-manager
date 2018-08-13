@@ -1,16 +1,25 @@
 QWidget{
     background-color: #222222;
 }
-
 QPushButton{
-    background-color: #FFFFFF;
+    background-color: rgb(255, 255, 255);
     height: 3em;
     margin: 0 0.5em 0 0.5em;
     padding: 5px;
 }
+QPushButton:hover{
+    background-color: rgb(245, 245, 245);
+}
 QLabel{
-    color: #FFFFFF;
+    color: rgb(255, 255, 255);
 }
 QComboBox{
-    background-color: #FFFFFF;
+    background-color: rgb(255, 255, 255);
+    selection-color: rgb(0, 0, 0);
+}
+QComboBox:item:selected{
+    background-color: rgb(240, 240, 240);
+}
+QComboBox QListView{
+    background-color: rgb(255, 255, 255);
 }

@@ -24,16 +24,16 @@ import os.path
 
 
 
-def restOfCode():
+def restOfCode(db):
     app = QApplication(sys.argv)
-    ex = MainWindow()
+    ex = MainWindow(db)
     sys.exit(app.exec_())
 
 class MainWindow(QMainWindow):
 
-    def __init__(self):
+    def __init__(self, db):
         super().__init__()
-        self.db = 'pass_manager_db.db'
+        self.db = db
         self.setWindowTitle('Password Manager')
         self.setStyleSheet(open("styles.qss", "r").read())
         self.welcome()
@@ -176,10 +176,10 @@ def main():
     if not os.path.isfile(db):
         print('Not found')
         SaveData.createDB(db)
-        restOfCode()
+        restOfCode(db)
     else:
         # Just do the rest of the code
-        restOfCode()
+        restOfCode(db)
     return True  
 
 if __name__ == '__main__':

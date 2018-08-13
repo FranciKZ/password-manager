@@ -77,7 +77,7 @@ class SaveData:
                                 );'''
             create_pass_table = '''CREATE TABLE Passwords (
                                     passID INTEGER PRIMARY KEY AUTOINCREMENT,
-                                    password TEXT
+                                    password TEXT,
                                     serviceID INTEGER,
                                     FOREIGN KEY(serviceID) REFERENCES Services(serviceID)
                                 );'''

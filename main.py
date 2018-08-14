@@ -150,7 +150,7 @@ class MainWindow(QMainWindow):
         grid.addWidget(changePassBtn, 3, 0)
         grid.addWidget(returnBtn, 3, 1)
 
-        # changePassBtn.clicked.connect(self.changePass)
+        changePassBtn.clicked.connect(lambda: changePass(self.db, serviceSelecter.currentText(), oldField.text()))
         returnBtn.clicked.connect(self.change_layout)
 
     def create_gen_pass_layout(self):
@@ -178,7 +178,7 @@ def addService(db, userName, serviceName):
     elif (serviceName,) in listOfServices:
         showDialog('Service already in system')
     else:
-        SaveData.insertNewService('Fran6819', db, userName, serviceName)
+        SaveData.insertNewService('testkey', db, userName, serviceName)
         showDialog('Successfully Added')
 
 def showDialog(message):
@@ -187,12 +187,15 @@ def showDialog(message):
     msg.exec()
 
 def getUserPassInfo(db, serviceName):
-    userPass = RetrieveData.getUserAndPass('Fran6819', db, serviceName)
-    #print(userPass[0])
-    #print(userPass[1])
-    #copyToClip(userPass[1])
-    #showDialog('Username : %s \n password has been copied to clipboard' % userPass[0])
+    userPass = RetrieveData.getUserAndPass('testkey', db, serviceName)
+    copyToClip(userPass[1])
+    showDialog('Username: %s \nPassword has been copied to clipboard' % userPass[0])
     
+def changePass(db, serviceName, oldPassword):
+    if oldPassword.strip() == RetrieveData.getPassword('testkey', db, serviceName):
+        SaveData.changePassword('', db, serviceName)
+        showDialog('Password Change Successful')
+
 def copyToClip(txt):
     command = 'echo ' + txt.strip() + '| pbcopy'
     os.system(command)

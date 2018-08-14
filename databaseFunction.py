@@ -32,15 +32,15 @@ class SaveData:
             conn.close()
             return True
 
-    def changePassword(self, key, db, serviceName):
-        newPass = AESCipher(key).encrypt(self.genPassword())
+    def changePassword(key, db, serviceName):
+        newPass = AESCipher(key).encrypt(SaveData.genPassword())
         #serviceID = c.execute('''   SELECT serviceID 
         #                            FROM services 
         #                            WHERE ? = serviceName''', serviceName)
         try: 
             conn = sqlite3.connect(db)
             c = conn.cursor()
-            c.execute('''   UPDATE Passwords (password) 
+            c.execute('''   UPDATE Passwords
                             SET password = ?
                             WHERE Passwords.serviceID = (
                                                             SELECT serviceID
@@ -53,8 +53,7 @@ class SaveData:
         finally:
             conn.commit()
             conn.close()
-            return True
-        
+            return True       
         
     def genPassword():
         alphabet = string.ascii_letters + string.digits
@@ -102,13 +101,15 @@ class RetrieveData:
         try:
             conn = sqlite3.connect(db)
             c = conn.cursor()
-            password = c.execute('''SELECT password 
-                                FROM Passwords 
-                                WHERE Passwords.serviceID = (
-                                    SELECT serviceID
-                                    FROM Services
-                                    WHERE serviceName = ?
+            c.execute('''SELECT password 
+                                    FROM Passwords 
+                                    WHERE Passwords.serviceID = (
+                                        SELECT serviceID
+                                        FROM Services
+                                        WHERE serviceName = ?
                                 )''', (serviceName,))
+            
+            password = c.fetchone()[0]
         except Error as e:
             print(e)
             return False
@@ -125,17 +126,16 @@ class RetrieveData:
             c = conn.cursor()
             c.execute(  '''   SELECT Usernames.userName, Passwords.password
                               FROM Usernames
-                              JOIN Usernames ON Usernames.ServiceID = Passwords.ServiceID
-                              WHERE Usernames.ServiceID = (
+                              JOIN Passwords ON Usernames.serviceID = Passwords.serviceID
+                              WHERE Usernames.serviceID = (
                                   SELECT serviceID
                                   FROM Services
                                   WHERE serviceName = ?
                               )
                         ''', (serviceName,))
             info = c.fetchall()
-            print(info)
-            userName = info[0]
-            password = AESCipher(key).decrypt(info[1])
+            userName = info[0][0]
+            password = AESCipher(key).decrypt(info[0][1])
         except Error as e:
             print(e)
             return False

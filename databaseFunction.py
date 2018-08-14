@@ -81,11 +81,8 @@ class SaveData:
                                     serviceID INTEGER,
                                     FOREIGN KEY(serviceID) REFERENCES Services(serviceID)
                                 );'''
-            print('Creating Services Table')
             c.execute(create_services_table)
-            print('Creating Username Table')
             c.execute(create_user_table)
-            print('Creating Passwords Table')
             c.execute(create_pass_table)
         except Error as e:
             print(e)

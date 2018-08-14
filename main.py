@@ -2,11 +2,11 @@
     Created by: Kollin Francis
 
     Todo:
-        Create Change Password Layout
-        Create Generate Password Layout
-        Implement Add Service Layout Functionality
-            Get information from Text boxes
-            Send information to database functions
+        Create Change Password Layout ~~~~ DONE
+        Create Generate Password Layout ~~~~ DONE
+        Implement Add Service Layout Functionality ~~~~ DONE
+            Get information from Text boxes ~~~~ DONE
+            Send information to database functions ~~~~ DONE
         Implement Get Username and Password Layout Functionality
             Display username textually
             Have it copy password straight to clipboard
@@ -16,8 +16,8 @@
 from databaseFunction import SaveData, RetrieveData
 from PyQt5.QtWidgets import (   QApplication, QWidget, QPushButton, QApplication,
                                 QGridLayout, QStackedLayout, QMainWindow, QLineEdit, QLabel,
-                                QComboBox)
-from PyQt5.QtGui import QFont
+                                QComboBox, QMessageBox)
+from PyQt5.QtGui import QFont, QGuiApplication, QClipboard
 import os
 import sys
 import os.path
@@ -94,9 +94,11 @@ class MainWindow(QMainWindow):
         self.add_service_widget.setLayout(grid)
         serviceLbl = QLabel('Service Name: ')
         serviceName = QLineEdit()
+        serviceName.setPlaceholderText('Service')
         userLbl = QLabel('Username: ')
         userNameField = QLineEdit()
-        addServiceBtn = QPushButton('Add Service') # ~~~~Todo Write Add Service Function
+        userNameField.setPlaceholderText('User name')
+        addServiceBtn = QPushButton('Add Service') # ~~~~Todo Write Add Service Function~~~~~ DONE
         returnBtn = QPushButton('Return')
 
         grid.addWidget(serviceLbl, 1, 0)
@@ -106,25 +108,25 @@ class MainWindow(QMainWindow):
         grid.addWidget(addServiceBtn, 3, 0)
         grid.addWidget(returnBtn, 3, 1)
 
-        addServiceBtn.clicked.connect(self.addService)
+        addServiceBtn.clicked.connect(lambda: addService(self.db, userNameField.text(), serviceName.text()))
         returnBtn.clicked.connect(self.change_layout)
 
     def create_get_userpass_layout(self):
         grid = QGridLayout()
         self.get_userpass_widget = QWidget()
         self.get_userpass_widget.setLayout(grid)
-
-        combo = QComboBox()
-        # ~~ Todo loop through results of services query and add it to combo box
+        serviceSelecter = QComboBox()
+        for i in RetrieveData.retrieveServices(self.db):
+            serviceSelecter.addItem(i[0])
         userLbl = QLabel('Username: ')
         passLbl = QLabel('Password has been copied to clipboard')
         getInfoBtn = QPushButton('Get Username and Password')
         returnBtn = QPushButton('Return')
 
-        grid.addWidget(combo, 1, 0)
+        grid.addWidget(serviceSelecter, 1, 0)
         grid.addWidget(getInfoBtn, 1, 1)
         grid.addWidget(returnBtn, 2, 1)
-        # getInfoBtn.clicked.connect(self.getInfo)
+        getInfoBtn.clicked.connect(lambda: getUserPassInfo(self.db, serviceSelecter.currentText()))
         returnBtn.clicked.connect(self.change_layout)
     
     def create_change_pass_layout(self):
@@ -134,6 +136,8 @@ class MainWindow(QMainWindow):
 
         serviceLbl = QLabel('Service')
         serviceSelecter = QComboBox()
+        for i in RetrieveData.retrieveServices(self.db):
+            serviceSelecter.addItem(i[0])
         oldLbl = QLabel('Old Password')
         oldField = QLineEdit()
         returnBtn = QPushButton('Return')
@@ -167,8 +171,31 @@ class MainWindow(QMainWindow):
         # genPassBtn.clicked.connect(self.changePass
         returnBtn.clicked.connect(self.change_layout)
 
-    def addService(self):
-        SaveData.insertNewService(SaveData, 'Fran6819', self.db, 'francikz', 'Netflix')
+def addService(db, userName, serviceName):
+    listOfServices = RetrieveData.retrieveServices(db)
+    if userName == '' or serviceName == '':
+        showDialog('You must enter information for the service and username')
+    elif (serviceName,) in listOfServices:
+        showDialog('Service already in system')
+    else:
+        SaveData.insertNewService('Fran6819', db, userName, serviceName)
+        showDialog('Successfully Added')
+
+def showDialog(message):
+    msg = QMessageBox()
+    msg.setText(message)
+    msg.exec()
+
+def getUserPassInfo(db, serviceName):
+    userPass = RetrieveData.getUserAndPass('Fran6819', db, serviceName)
+    #print(userPass[0])
+    #print(userPass[1])
+    #copyToClip(userPass[1])
+    #showDialog('Username : %s \n password has been copied to clipboard' % userPass[0])
+    
+def copyToClip(txt):
+    command = 'echo ' + txt.strip() + '| pbcopy'
+    os.system(command)
 
 def main():
     #how to use databaseFunction functions
@@ -179,8 +206,7 @@ def main():
         restOfCode(db)
     else:
         # Just do the rest of the code
-        restOfCode(db)
-    return True  
+        restOfCode(db) 
 
 if __name__ == '__main__':
     main()

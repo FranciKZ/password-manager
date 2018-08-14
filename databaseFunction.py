@@ -9,9 +9,9 @@ from sqlite3 import Error
 from encryption import AESCipher
 
 class SaveData:
-    def insertNewService(self, key, db, userName, serviceName):
+    def insertNewService(key, db, userName, serviceName):
         # Generate New Password and Encrypt
-        encryptedPass = AESCipher(key).encrypt(self.genPassword(SaveData))
+        encryptedPass = AESCipher(key).encrypt(SaveData.genPassword())
 
         # Establish db connection
         # Insert Data
@@ -56,7 +56,7 @@ class SaveData:
             return True
         
         
-    def genPassword(self):
+    def genPassword():
         alphabet = string.ascii_letters + string.digits
         return ''.join(secrets.choice(alphabet) for i in range(20))
 
@@ -67,7 +67,8 @@ class SaveData:
             c = conn.cursor()
             create_services_table = '''CREATE TABLE Services (
                                         serviceID INTEGER PRIMARY KEY AUTOINCREMENT,
-                                        serviceName TEXT
+                                        serviceName TEXT,
+                                        UNIQUE (serviceName)
                                     );'''
             create_user_table = '''CREATE TABLE Usernames (
                                     usernameID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -96,12 +97,18 @@ class SaveData:
             return True
 
 class RetrieveData:
-    def getPassword(self, key, db, serviceID):
+    def getPassword(key, db, serviceName):
         password = ''
         try:
             conn = sqlite3.connect(db)
             c = conn.cursor()
-            password = c.execute('''SELECT password FROM Passwords WHERE Passwords.serviceID = ?''', (serviceID,))
+            password = c.execute('''SELECT password 
+                                FROM Passwords 
+                                WHERE Passwords.serviceID = (
+                                    SELECT serviceID
+                                    FROM Services
+                                    WHERE serviceName = ?
+                                )''', (serviceName,))
         except Error as e:
             print(e)
             return False
@@ -109,20 +116,24 @@ class RetrieveData:
             conn.close()
     
         return AESCipher(key).decrypt(password)
-    def getUserAndPass(self, key, db, serviceID):
+    def getUserAndPass(key, db, serviceName):
         userName = ''
         password = ''
 
         try:
             conn = sqlite3.connect(db)
             c = conn.cursor()
-
             c.execute(  '''   SELECT Usernames.userName, Passwords.password
                               FROM Usernames
-                              INNER JOIN Usernames ON Usernames.ServiceID = Passwords.ServiceID
-                              WHERE Usernames.ServiceID = ?
-                        ''', (serviceID,))
-            info = c.fetchone()
+                              JOIN Usernames ON Usernames.ServiceID = Passwords.ServiceID
+                              WHERE Usernames.ServiceID = (
+                                  SELECT serviceID
+                                  FROM Services
+                                  WHERE serviceName = ?
+                              )
+                        ''', (serviceName,))
+            info = c.fetchall()
+            print(info)
             userName = info[0]
             password = AESCipher(key).decrypt(info[1])
         except Error as e:
@@ -133,16 +144,17 @@ class RetrieveData:
 
         return (userName, password)    
 
-    def retrieveServices(self, db):
+    def retrieveServices(db):
         listOfServices = ''
         try:
             conn = sqlite3.connect(db)
+            conn.text_factory = str
             c = conn.cursor()
             c.execute(''' SELECT serviceName FROM Services ''')
-            listOfServices = list(c.fetchall())
-            print(listOfServices)
+            listOfServices = c.fetchall()       
         except Error as e:
             print(e)
+            return e.message
         finally:
             conn.close()
 

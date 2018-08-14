@@ -10,8 +10,11 @@
         Implement Get Username and Password Layout Functionality ~~~~ DONE
             Display username textually ~~~~ DONE
             Have it copy password straight to clipboard ~~~~ DONE
-        Add master key lock before welcome screen
         Add combobox information in username and password layout ~~~~ DONE
+        Add master key lock before welcome screen
+        Redesign GUI to be way nicer
+        Improve efficiency and clean up code
+        Possibly see if class structure can be improved upon
 """
 from databaseFunction import SaveData, RetrieveData
 from PyQt5.QtWidgets import (   QApplication, QWidget, QPushButton, QApplication,
@@ -176,7 +179,7 @@ def addService(db, userName, serviceName):
     else:
         SaveData.insertNewService('testkey', db, userName, serviceName)
         copyToClip(getPassword(db, serviceName))
-        showDialog('Successfully Added. Password For Service Has Been Copied to Your Clipboard')
+        showDialog('Successfully Added. \nPassword For Service Has Been Copied to Your Clipboard')
 
 def showDialog(message):
     msg = QMessageBox()

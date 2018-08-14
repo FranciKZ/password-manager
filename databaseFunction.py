@@ -147,7 +147,9 @@ class RetrieveData:
             conn = sqlite3.connect(db)
             conn.text_factory = str
             c = conn.cursor()
-            c.execute(''' SELECT serviceName FROM Services ''')
+            c.execute('''   SELECT serviceName 
+                            FROM Services 
+                    ''')
             listOfServices = c.fetchall()       
         except Error as e:
             print(e)

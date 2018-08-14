@@ -167,11 +167,6 @@ class MainWindow(QMainWindow):
     #     genPassBtn.clicked.connect(lambda: genPassword())
     #     returnBtn.clicked.connect(self.change_layout)
 
-def genPassword():
-    password = SaveData.genPassword()
-    copyToClip(password)
-    showDialog('Password has been generated and copied to clipboard')
-
 def addService(db, userName, serviceName):
     listOfServices = RetrieveData.retrieveServices(db)
     if userName == '' or serviceName == '':

@@ -32,6 +32,10 @@ class SaveData:
             conn.close()
             return True
 
+    # ~~~~TODO
+    # def setMaster(db, password):
+    #     encryptedPass = AESCipher()
+
     def changePassword(key, db, serviceName):
         newPass = AESCipher(key).encrypt(SaveData.genPassword())
         #serviceID = c.execute('''   SELECT serviceID 
@@ -57,7 +61,7 @@ class SaveData:
         
     def genPassword():
         alphabet = string.ascii_letters + string.digits
-        return ''.join(secrets.choice(alphabet) for i in range(20))
+        return ''.join(secrets.choice(alphabet) for i in range(16))
 
     # Used for intial DB creation and setup    
     def createDB(db):
@@ -93,18 +97,44 @@ class SaveData:
             return True
 
 class RetrieveData:
+    # def checkMasterPassExists(db):
+    #     try:
+    #         conn = sqlite3.connect(db)
+    #         c = conn.cursor()
+    #         exists = c.execute('''SELECT EXISTS (
+    #                                     SELECT 1 
+    #                                     FROM passwords 
+    #                                     WHERE Passwords.serviceID = (
+    #                                         SELECT serviceID
+    #                                         FROM Services
+    #                                         WHERE serviceName = "master"
+    #                                     )
+    #                                 )
+    #                             ''')
+    #         if not exists:
+    #             raise Error("Doesn't exist")
+    #     except Error as e:
+    #         return False
+    #     finally:
+    #         conn.close()
+    #         return True
+    def checkMasterPass(db, password):
+        conn = sqlite3.connect(db)
+        c = conn.cursor()
+        
+
     def getPassword(key, db, serviceName):
         password = ''
         try:
             conn = sqlite3.connect(db)
             c = conn.cursor()
-            c.execute('''SELECT password 
-                                    FROM Passwords 
-                                    WHERE Passwords.serviceID = (
-                                        SELECT serviceID
-                                        FROM Services
-                                        WHERE serviceName = ?
-                                )''', (serviceName,))
+            c.execute(  ''' SELECT password 
+                            FROM Passwords 
+                            WHERE Passwords.serviceID = (
+                                SELECT serviceID
+                                FROM Services
+                                WHERE serviceName = ?
+                        )''', (serviceName,))
             
             password = c.fetchone()[0]
         except Error as e:

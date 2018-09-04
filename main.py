@@ -13,8 +13,8 @@
         Add combobox information in username and password layout ~~~~ DONE
         Add master key lock before welcome screen
         Redesign GUI to be way nicer
-        Improve efficiency and clean up code
-        Possibly see if class structure can be improved upon
+        Look over code to see opportunities to improve efficiency and clean up code
+        Store passwords in database more securely by using a randomly generated salt and then hashing it
 """
 from databaseFunction import SaveData, RetrieveData
 from PyQt5.QtWidgets import (   QApplication, QWidget, QPushButton, QApplication,
@@ -24,14 +24,14 @@ import os
 import sys
 import os.path
 
-def restOfCode(db):
+def restOfCode(db, dbFound):
     app = QApplication(sys.argv)
-    ex = MainWindow(db)
+    ex = MainWindow(db, dbFound)
     sys.exit(app.exec_())
 
 class MainWindow(QMainWindow):
 
-    def __init__(self, db):
+    def __init__(self, db, dbFound):
         super().__init__()
         self.db = db
         self.setWindowTitle('Password Manager')
@@ -66,6 +66,17 @@ class MainWindow(QMainWindow):
         #     self.create_gen_pass_layout()
         #     self.stacked_layout.addWidget(self.gen_pass_widget)
         #     self.stacked_layout.setCurrentWidget(self.gen_pass_widget)
+
+    def create_login_layout(self, db, dbFound):
+        grid = QGridLayout()
+        self.login_screen = QWidget()
+        self.login_screen.setLayout(grid)
+        loginLbl = QLabel('Login')
+        loginForm = QLineEdit()
+        loginForm.setPlaceholderText('Password')
+        loginBtn = QPushButton('Login')
+
+        loginBtn.clicked.connect(lambda: login(db, dbFound, loginForm.text()))
 
     def welcome(self):
         grid = QGridLayout()
@@ -204,16 +215,26 @@ def copyToClip(txt):
     command = 'echo ' + txt.strip() + '| pbcopy'
     os.system(command)
 
+def login(db, dbFound, password): # ~~~~~ TO DO
+    if dbFound:
+        # check if entered password matches password in databse because if the database
+        # exists then that means the program has been run before and there should be a master
+        # password in the database already
+        return None
+    else:
+        # Ask the user to enter a master password because it needs to be saved in the database
+        return None
+
 def main():
     #how to use databaseFunction functions
     db = 'pass_manager_db.db'
     if not os.path.isfile(db):
         print('Not found')
         SaveData.createDB(db)
-        restOfCode(db)
+        restOfCode(db, False)
     else:
         # Just do the rest of the code
-        restOfCode(db) 
+        restOfCode(db, True) 
 
 if __name__ == '__main__':
     main()

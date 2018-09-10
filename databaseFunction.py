@@ -32,12 +32,18 @@ class SaveData:
             conn.close()
             return True
 
-    # ~~~~TODO
-    # def setMaster(db, password):
-    #     encryptedPass = AESCipher()
+    #~~~~TODO
+    def setMaster(key, db, password):
+        salt = SaveData.genSalt()
+        password += salt
+        encryptedPass = AESCipher(SaveData.genPassword())
 
     def changePassword(key, db, serviceName):
-        newPass = AESCipher(key).encrypt(SaveData.genPassword())
+        newPass = SaveData.genPassword()
+        salt = SaveData.genSalt()
+        newPass += salt
+        encryptedPass = AESCipher(key).encrypt(newPass)
+        
         #serviceID = c.execute('''   SELECT serviceID 
         #                            FROM services 
         #                            WHERE ? = serviceName''', serviceName)
@@ -50,7 +56,15 @@ class SaveData:
                                                             SELECT serviceID
                                                             FROM Services
                                                             WHERE serviceName = ?
-                                                        )''', (newPass, serviceName))
+                                                        )''', (encryptedPass, serviceName))
+            c.execute(  ''' UPDATE Usernames 
+                            SET sodiumChloride = ?
+                            WHERE Usernames.serviceID = (
+                                                            SELECT serviceID
+                                                            FROM Services
+                                                            WHERE serviceName = ?
+                            )
+                        ''', (salt, serviceName))
         except Error as e:
             print(e)
             return False
@@ -62,6 +76,10 @@ class SaveData:
     def genPassword():
         alphabet = string.ascii_letters + string.digits
         return ''.join(secrets.choice(alphabet) for i in range(16))
+
+    def genSalt():
+        alpabet = string.ascii_letters + string.digits
+        return ''.join(secrets.choice(alphabet) for i in range(8))
 
     # Used for intial DB creation and setup    
     def createDB(db):
@@ -77,6 +95,7 @@ class SaveData:
                                     usernameID INTEGER PRIMARY KEY AUTOINCREMENT,
                                     userName TEXT,
                                     serviceID INTEGER,
+                                    sodiumChloride TEST,
                                     FOREIGN KEY(serviceID) REFERENCES Services(serviceID)
                                 );'''
             create_pass_table = '''CREATE TABLE Passwords (
@@ -144,6 +163,7 @@ class RetrieveData:
             conn.close()
     
         return AESCipher(key).decrypt(password)
+
     def getUserAndPass(key, db, serviceName):
         userName = ''
         password = ''

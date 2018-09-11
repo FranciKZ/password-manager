@@ -11,7 +11,10 @@ from encryption import AESCipher
 class SaveData:
     def insertNewService(key, db, userName, serviceName):
         # Generate New Password and Encrypt
-        encryptedPass = AESCipher(key).encrypt(SaveData.genPassword())
+        newPass = SaveData.genPassword()
+        salt = SaveData.genSalt()
+        newPass += salt
+        encryptedPass = AESCipher(key).encrypt(newPass)
 
         # Establish db connection
         # Insert Data
@@ -20,10 +23,10 @@ class SaveData:
             conn = sqlite3.connect(db)
             c = conn.cursor()
 
-            c.execute('''INSERT INTO Services (serviceName) VALUES (?)''', (serviceName,))
+            c.execute('''INSERT INTO Services (serviceName) VALUES (?) ''', (serviceName,))
             serviceID = c.lastrowid
             c.execute('''INSERT INTO Passwords (password, serviceID) VALUES(?, ?) ''', (encryptedPass, serviceID))
-            c.execute('''INSERT INTO Usernames (userName, serviceID) VALUES(?, ?) ''', (userName, serviceID))
+            c.execute('''INSERT INTO Usernames (userName, serviceID, salt) VALUES(?, ?, ?) ''', (userName, serviceID, salt))
         except Error as e:
             print(e)
             return False
@@ -33,10 +36,27 @@ class SaveData:
             return True
 
     #~~~~TODO
-    def setMaster(key, db, password):
+    def setMaster(db, password):
         salt = SaveData.genSalt()
         password += salt
-        encryptedPass = AESCipher(SaveData.genPassword())
+        toEncrypt = SaveData.genPassword()
+        print('setMaster pass + salt = ', password)
+        encryptedPass = AESCipher(password).encrypt(toEncrypt)
+        print('To Encrypt = ', toEncrypt)
+        print('Encrypted pass = ', encryptedPass)
+
+        try:
+            conn = sqlite3.connect(db)
+            c = conn.cursor()
+            c.execute(''' INSERT INTO Services (serviceName) VALUES(?) ''', ('Master',))
+            serviceId = c.lastrowid
+            c.execute(''' INSERT INTO Passwords(password, serviceID) VALUES (?, ?) ''', (encryptedPass, serviceId))
+            c.execute(''' INSERT INTO Usernames(userName, serviceID, salt) VALUES(?, ?, ?) ''', ('Master', serviceId, salt))
+        except Error as e:
+            return False
+        finally:
+            conn.commit()
+            conn.close()
 
     def changePassword(key, db, serviceName):
         newPass = SaveData.genPassword()
@@ -58,7 +78,7 @@ class SaveData:
                                                             WHERE serviceName = ?
                                                         )''', (encryptedPass, serviceName))
             c.execute(  ''' UPDATE Usernames 
-                            SET sodiumChloride = ?
+                            SET salt = ?
                             WHERE Usernames.serviceID = (
                                                             SELECT serviceID
                                                             FROM Services
@@ -78,7 +98,7 @@ class SaveData:
         return ''.join(secrets.choice(alphabet) for i in range(16))
 
     def genSalt():
-        alpabet = string.ascii_letters + string.digits
+        alphabet = string.ascii_letters + string.digits
         return ''.join(secrets.choice(alphabet) for i in range(8))
 
     # Used for intial DB creation and setup    
@@ -95,7 +115,7 @@ class SaveData:
                                     usernameID INTEGER PRIMARY KEY AUTOINCREMENT,
                                     userName TEXT,
                                     serviceID INTEGER,
-                                    sodiumChloride TEST,
+                                    salt TEST,
                                     FOREIGN KEY(serviceID) REFERENCES Services(serviceID)
                                 );'''
             create_pass_table = '''CREATE TABLE Passwords (
@@ -113,34 +133,32 @@ class SaveData:
         finally:
             conn.commit()
             conn.close()
-            return True
 
 class RetrieveData:
-    # def checkMasterPassExists(db):
-    #     try:
-    #         conn = sqlite3.connect(db)
-    #         c = conn.cursor()
-    #         exists = c.execute('''SELECT EXISTS (
-    #                                     SELECT 1 
-    #                                     FROM passwords 
-    #                                     WHERE Passwords.serviceID = (
-    #                                         SELECT serviceID
-    #                                         FROM Services
-    #                                         WHERE serviceName = "master"
-    #                                     )
-    #                                 )
-    #                             ''')
-    #         if not exists:
-    #             raise Error("Doesn't exist")
-    #     except Error as e:
-    #         return False
-    #     finally:
-    #         conn.close()
-    #         return True
+    # This is used to check the login password provided
+    # if it matched what is decrypted then the user should be allowed 
+    # to access the program
     def checkMasterPass(db, password):
-        conn = sqlite3.connect(db)
-        c = conn.cursor()
-        
+        try:
+            conn = sqlite3.connect(db)
+            c = conn.cursor()
+            c.execute(''' SELECT salt FROM Usernames WHERE serviceID = 0 ''')
+            salt = c.fetchone()[0]
+            password += salt
+            c.execute(''' SELECT password FROM Passwords where serviceID = 0 ''')
+            masterpass = c.fetchone()[0]
+
+            decryptedPass = AESCipher(password).decrypt(masterpass)
+
+            if(decryptedPass == password):
+                return True
+            else:
+                return False
+        except Error as e:
+            print(e)
+            return False
+        finally: 
+            conn.close()
 
     def getPassword(key, db, serviceName):
         password = ''

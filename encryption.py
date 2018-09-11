@@ -31,16 +31,3 @@ class AESCipher(object):
     @staticmethod
     def _unpad(s):
         return s[:-ord(s[len(s)-1:])]
-
-
-# Testing purposes
-
-#key = '1234567890abcdefgh'
-#message = 'this is a message'
-
-#enc = AESCipher(key).encrypt(message)
-#dec = AESCipher(key).decrypt(enc)
-
-#print(_enc)
-#print(enc)
-#print(message == dec)

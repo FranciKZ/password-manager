@@ -23,6 +23,7 @@ from PyQt5.QtWidgets import (   QApplication, QWidget, QPushButton, QApplication
 import os
 import sys
 import os.path
+from encryption import AESCipher
 
 def restOfCode(db, dbFound):
     app = QApplication(sys.argv)
@@ -37,8 +38,8 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('Password Manager')
         self.setStyleSheet(open("styles.qss", "r").read())
         self.stacked_layout = QStackedLayout() # Holds various layouts
-        self.welcome()
-        self.stacked_layout.addWidget(self.welcome_screen)
+        self.create_login_layout(db, dbFound)
+        self.stacked_layout.addWidget(self.login_screen)
 
         self.central_widget = QWidget()
         self.central_widget.setLayout(self.stacked_layout)
@@ -46,19 +47,22 @@ class MainWindow(QMainWindow):
         self.setGeometry(500, 500, 600, 300)
         self.show()
             
-    def change_layout(self):
-        sender = self.sender()
-        if(sender.text() == 'Return'):
+    def change_layout(self, page):
+        if(page == 0):
+            self.welcome()
+            self.stacked_layout.addWidget(self.welcome_screen)
             self.stacked_layout.setCurrentWidget(self.welcome_screen)
-        elif(sender.text() == 'Add Service'):
+        if(page == 1):
+            self.stacked_layout.setCurrentWidget(self.welcome_screen)
+        elif(page == 2):
             self.create_add_service_layout()
             self.stacked_layout.addWidget(self.add_service_widget)
             self.stacked_layout.setCurrentWidget(self.add_service_widget)
-        elif(sender.text() == 'Get Username and Password'):
+        elif(page == 3):
             self.create_get_userpass_layout()
             self.stacked_layout.addWidget(self.get_userpass_widget)
             self.stacked_layout.setCurrentWidget(self.get_userpass_widget)
-        elif(sender.text() == 'Change Password'):
+        elif(page == 4):
             self.create_change_pass_layout()
             self.stacked_layout.addWidget(self.change_pass_widget)
             self.stacked_layout.setCurrentWidget(self.change_pass_widget)
@@ -75,8 +79,10 @@ class MainWindow(QMainWindow):
         loginForm = QLineEdit()
         loginForm.setPlaceholderText('Password')
         loginBtn = QPushButton('Login')
-
-        loginBtn.clicked.connect(lambda: login(db, dbFound, loginForm.text()))
+        grid.addWidget(loginLbl, 0, 0)
+        grid.addWidget(loginForm, 0, 1)
+        grid.addWidget(loginBtn, 1, 1)
+        loginBtn.clicked.connect(lambda: login(self, db, dbFound, loginForm.text()))
 
     def welcome(self):
         grid = QGridLayout()
@@ -91,9 +97,9 @@ class MainWindow(QMainWindow):
         grid.addWidget(changePassBtn, 0, 2)
         # grid.addWidget(genPassBtn, 2, 1)    
 
-        addServiceBtn.clicked.connect(self.change_layout)
-        getUserAndPassBtn.clicked.connect(self.change_layout)
-        changePassBtn.clicked.connect(self.change_layout)
+        addServiceBtn.clicked.connect(self.change_layout(2))
+        getUserAndPassBtn.clicked.connect(self.change_layout(3))
+        changePassBtn.clicked.connect(self.change_layout(4))
         # genPassBtn.clicked.connect(self.change_layout)
     
     def create_add_service_layout(self):
@@ -117,7 +123,7 @@ class MainWindow(QMainWindow):
         grid.addWidget(returnBtn, 3, 1)
 
         addServiceBtn.clicked.connect(lambda: addService(self.db, userNameField.text(), serviceName.text()))
-        returnBtn.clicked.connect(self.change_layout)
+        returnBtn.clicked.connect(self.change_layout(1))
 
     def create_get_userpass_layout(self):
         grid = QGridLayout()
@@ -135,7 +141,7 @@ class MainWindow(QMainWindow):
         grid.addWidget(getInfoBtn, 1, 1)
         grid.addWidget(returnBtn, 2, 1)
         getInfoBtn.clicked.connect(lambda: getUserPassInfo(self.db, serviceSelecter.currentText()))
-        returnBtn.clicked.connect(self.change_layout)
+        returnBtn.clicked.connect(self.change_layout(1))
     
     def create_change_pass_layout(self):
         grid = QGridLayout()
@@ -159,7 +165,7 @@ class MainWindow(QMainWindow):
         grid.addWidget(returnBtn, 3, 1)
 
         changePassBtn.clicked.connect(lambda: changePass(self.db, serviceSelecter.currentText(), oldField.text()))
-        returnBtn.clicked.connect(self.change_layout)
+        returnBtn.clicked.connect(self.change_layout(1))
 
     # def create_gen_pass_layout(self):
     #     grid = QGridLayout()
@@ -215,26 +221,35 @@ def copyToClip(txt):
     command = 'echo ' + txt.strip() + '| pbcopy'
     os.system(command)
 
-def login(db, dbFound, password): # ~~~~~ TO DO
+def login(self, db, dbFound, password): # ~~~~~ TO DO
     if dbFound:
         # check if entered password matches password in databse because if the database
         # exists then that means the program has been run before and there should be a master
         # password in the database already
-        return None
+        if(RetrieveData.checkMasterPass(db, password)):
+            self.change_layout(0)
     else:
         # Ask the user to enter a master password because it needs to be saved in the database
+        SaveData.setMaster(db, password)
+        self.change_layout(0)
         return None
 
 def main():
     #how to use databaseFunction functions
     db = 'pass_manager_db.db'
-    if not os.path.isfile(db):
-        print('Not found')
-        SaveData.createDB(db)
-        restOfCode(db, False)
-    else:
+    #if not os.path.isfile(db):
+    #    print('Not found')
+    #    SaveData.createDB(db)
+    #    restOfCode(db, False)
+    #else:
         # Just do the rest of the code
-        restOfCode(db, True) 
+    #    restOfCode(db, True)
+    password = 'Fran6819KO50IP1e'
+    generated = 'tHrPSvvVIHTRBNc8'
+    toDecrypt = "dc94RN/GLfJcVCD6e5+FvGyFitfR+MvLh1Fj3T/mwkyM4YeUeBA6NNroDiVHNKn0"
+    print(password)
+    unencrypted = AESCipher(password).decrypt(toDecrypt)
+    print(unencrypted)
 
 if __name__ == '__main__':
     main()

@@ -15,6 +15,7 @@
         Redesign GUI to be way nicer
         Look over code to see opportunities to improve efficiency and clean up code
         Store passwords in database more securely by using a randomly generated salt and then hashing it
+        Uses user password to encrypt randomly generated password which will be used as the key to encrypt other passwords.
 """
 from databaseFunction import SaveData, RetrieveData
 from PyQt5.QtWidgets import (   QApplication, QWidget, QPushButton, QApplication,
